@@ -1,11 +1,11 @@
 1. 
     a. Which prescriber had the highest total number of claims (totaled over all drugs)? Report the npi and the total number of claims.
 
-	Select total_claim_count, nppes_provider_last_org_name, pcr.npi, drug_name
+	Select pct.total_claim_count, nppes_provider_last_org_name,pct.npi,pcr.npi,drug_name
 	From prescription as pct
 	Left Join prescriber AS Pcr
 	ON pct.npi = pcr.npi
-	ORDER by total_claim_count DESC;
+	ORDER BY total_claim_count DESC;
 
 --- Coffey had the highest total # of claims totaled over all drugs. The NPI was 1912011792 and the total # of claims was 4538.
 
@@ -50,6 +50,12 @@ Select nppes_provider_first_name,nppes_provider_last_org_name,specialty_descript
 		
 
     c. **Challenge Question:** Are there any specialties that appear in the prescriber table that have no associated prescriptions in the prescription table?
+
+		Select psr.specialty_description, psc.total_claim_count,psr.description_flag
+			FROM prescription as psc
+			LEFT JOIN prescriber as psr 
+			USING (npi);
+		
 
 
     d. **Difficult Bonus:** *Do not attempt until you have solved all other problems!* For each specialty, report the percentage of total claims by that specialty which are for opioids. Which specialties have a high percentage of opioids?
@@ -193,10 +199,9 @@ Select  psc.npi,
 		psr.nppes_provider_city,
 		d.opioid_drug_flag
 From prescription AS psc
-		FUll Join drug AS d
-		ON d.drug_name = psc.drug_name
-		FULL JOIN prescriber as psr
-		ON psr.npi=psc.npi
+		Left JOIN drug AS d
+		on d.drug_name = psc.drug_name
+		CROSS JOIN prescriber AS psr
 WHERE specialty_description = 'Pain Management'
 AND nppes_provider_city = 'NASHVILLE'
 AND opioid_drug_flag = 'Y';
@@ -204,9 +209,28 @@ AND opioid_drug_flag = 'Y';
 
 	
     b. Next, report the number of claims per drug per prescriber. Be sure to include all combinations, whether or not the prescriber had any claims. You should report the npi, the drug name, and the number of claims (total_claim_count).
+		
+Select  psc.npi,
+		psr.nppes_provider_last_org_name,
+		COUNT(psc.drug_name),
+		psr.specialty_description,
+		psr.nppes_provider_city,
+		d.opioid_drug_flag,
+		d.drug_name
+From prescription AS psc
+		FUll Join drug AS d
+		ON d.drug_name = psc.drug_name
+		FULL JOIN prescriber as psr
+		ON psr.npi=psc.npi
+WHERE specialty_description = 'Pain Management'
+AND nppes_provider_city = 'NASHVILLE'
+AND opioid_drug_flag = 'Y'
+GROUP BY d.drug_name,psr.nppes_provider_last_org_name, psr.npi,psc.npi,psr.specialty_description,psr.nppes_provider_city,d.opioid_drug_flag;
 
-		Select npi, drug_name, total_claim_count
-		From prescription; 
+
+
 			
 
     c. Finally, if you have not done so already, fill in any missing values for total_claim_count with 0. Hint - Google the COALESCE function.
+
+
